@@ -16,10 +16,7 @@ fs.readFile('input.txt', function(err, data) {
     }
     const isVisible = (tree, x,y) => {
         let views = getViews(x,y);
-        return views.some(view => {
-            let visible = view.every(area => area < tree);
-            return visible;
-        });
+        return views.some(view => view.every(area => area < tree));
     }
 
     // Part 1
