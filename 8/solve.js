@@ -6,12 +6,6 @@ fs.readFile('input.txt', function(err, data) {
     if(err) throw err;
     const rows = data.toString().split("\n").map((row) => row.split("").map(tree => parseInt(tree)));
 
-    const isVisible = (height, x, y) => {
-        let row = [...rows[y]];
-        let column = rows.map(row => row[x]);
-        return isVisibleRow(height, x, row) || isVisibleRow(height,y, column);        
-    }
-
     const getViews = (x, y) => {
         let row = [...rows[y]];
         let column = rows.map(row => row[x]);
@@ -24,20 +18,7 @@ fs.readFile('input.txt', function(err, data) {
         return [left, row];
     }
 
-    const isVisibleRow = (height, index, row) => {
-        let first = row.splice(0,index);
-        row.shift();
-
-        let firstBlocked = first.some((tree) => {
-            return tree >= height;
-        });
-        let secondBlocked = row.some(tree => {
-            return tree >= height;
-        });
-        return !firstBlocked || !secondBlocked; 
-    }
-
-    const testVisible = (tree, x,y) => {
+    const isVisible = (tree, x,y) => {
         let views = getViews(x,y);
         return views.some(view => {
             let visible = view.every(area => area < tree);
@@ -45,21 +26,31 @@ fs.readFile('input.txt', function(err, data) {
         });
     }
 
+    // Part 1
     let numberOfVisibleTrees = 0;
-    let numberOfVisibleTrees2 = 0;
     rows.forEach((row, y) => {
         row.forEach((tree, x) => {
             numberOfVisibleTrees += (isVisible(tree,x,y) ? 1 : 0);
-            numberOfVisibleTrees2 += (testVisible(tree,x,y) ? 1 : 0);
         });
-    })
-
-
+    });
     console.log('Part 1',numberOfVisibleTrees);
-    console.log('Part 1',numberOfVisibleTrees2);
 
-    console.dir(testVisible(1, 5, 0));
-
+    // Part 2
+    let highestScenicScore = 0;
+    rows.forEach((row, y) => {
+        row.forEach((tree, x) => {
+            let scores = getViews(x,y).map((view) => {
+                let score = view.findIndex(area => area >= tree);
+                return score == -1 ? view.length : score;
+            });
+            let scenicScore = scores.reduce((acc, score) => acc*score, 1);
+            if(scenicScore > highestScenicScore) {
+                highestScenicScore = scenicScore;
+                console.log(scenicScore, scores);
+            }
+        });
+    });
+    console.log('Part 2', highestScenicScore);
 });
 
 
