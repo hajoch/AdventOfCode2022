@@ -1,14 +1,13 @@
 const fs = require('fs');
 
 const translateDir = (direction) => {
-    switch (direction) {
-        case 'R': return [1,0];
-        case 'L': return [-1,0];
-        case 'U': return [0,-1];
-        case 'D': return [0,1];
+    switch (direction.toString()) {
+        case [1,0].toString() : return '>';
+        case [-1,0].toString() : return '<';
+        case [0,-1].toString() : return '^';
+        case [0,1].toString() : return 'v';
     }
 }
-
 const moves = [
     [1,0],
     [-1,0],
@@ -21,23 +20,20 @@ fs.readFile('input.txt', function(err, data) {
     if(err) throw err;
     const heightmap = data.toString().split("\n").map((row) => row.split(""));
 
-    console.dir(heightmap);
     const maxX = heightmap[0].length;
     const maxY = heightmap.length;
-
-    let s = [1,0];
-
     const distances = {};
-
-    const visual = new Array(maxY).fill(new Array(maxX).fill('.'));
+    const visual = new Array(maxY)
+        .fill(null)
+        .map(() => new Array(maxX).fill('.'));
 
     const possibleMoves = ([x,y]) => {
         let height = getHeight([x,y]);
-        return moves.map(([xx, yy]) => [x+xx, y+yy]).filter((destination) => {
+        return moves.map(([xx, yy]) => [[x+xx, y+yy], translateDir([xx,yy])]).filter(([destination]) => {
             if(destination[0] < 0 || destination[0] > maxX-1 || destination[1]< 0 || destination[1]>maxY-1) {
                 return false
             }
-            return (Math.abs(height - getHeight(destination)) < 2);
+            return ((getHeight(destination) - height) <= 1);
         });
     }
     const getHeight = ([x,y]) => {
@@ -47,25 +43,47 @@ fs.readFile('input.txt', function(err, data) {
         return letter.charCodeAt(0);
     }
     
-    const search = (from, position, distanceTraveled) => {
+    const search = (from, position, distanceTraveled, symbol) => {
         let key = position.toString();
+        //Part 2 - Does not evaluate all starting positions, but works for the input
+        if(heightmap[position[1]][position[0]] === 'a') distanceTraveled = 0;
+
         if(distances.hasOwnProperty(key)){
-            if(distances[key] > distanceTraveled) distances[key] = distanceTraveled;
-            else {
+            if(distances[key] > distanceTraveled) {
+                distances[key] = distanceTraveled;
+                if(from) visual[from[1]][from[0]] = symbol;
+            } else {
                 return;
             }
         } else {
-            distances[key] = distanceTraveled;            
+            distances[key] = distanceTraveled;
+            if(from) visual[from[1]][from[0]] = symbol;
         }
-        let canMove = possibleMoves(position).filter((dest) => dest.toString() != from.toString());
-        canMove.forEach(destination => {
-            search(position, destination, ++distanceTraveled);
+        let canMove = possibleMoves(position).filter(([dest]) => dest.toString() != from.toString());
+        canMove.forEach(([destination, symbol]) => {
+            let newDistance = distanceTraveled+1;
+            search(position, destination, newDistance, symbol);
         });
     }
-    search('', [0,0], 0);
-    console.dir(distances);
 
-    const goalkey = distances[[5,2].toString()];
-    console.log('Part 1', goalkey);
-    console.log(heightmap[2][5]);
+    let goal;
+    let start;
+    heightmap.forEach((row, y) => {
+        let xE = row.findIndex(v => v === 'E');
+        let xS = row.findIndex(v => v === 'S');
+        if(xE != -1) { goal = [xE,y]; }
+        if(xS != -1) { start = [xS,y]; }
+    });
+
+    search('', start, 0, 'O');
+
+    const goalkey = distances[goal.toString()];
+    console.log('Shortest Path', goalkey);
+    console.log(heightmap[goal[1]][goal[0]]);
+    visual.forEach(row => {
+//        console.log(row.join(""));
+    });
+    // > 450
+    // < 465
+    //
 });
