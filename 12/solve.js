@@ -43,7 +43,7 @@ fs.readFile('input.txt', function(err, data) {
         });
     }
 
-    // Ugly but don't have time to fix
+    // Lots of ugliness but don't care, all tasks are solved
     let goal;
     let start;
     heightmap.forEach((row, y) => {
@@ -56,6 +56,6 @@ fs.readFile('input.txt', function(err, data) {
     // Do the search
     search('', start, 0, 'O');
 
-    const goalkey = distances[goal.toString()];
-    console.log('Shortest Path', goalkey);
+    const distance = distances[goal.toString()];
+    console.log('Shortest Path', distance);
 });
